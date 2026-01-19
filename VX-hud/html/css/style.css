@@ -1,0 +1,600 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+:root {
+    --primary: #4ade80;
+    --health: #4ade80;
+    --armor: #4ade80;
+    --hunger: #4ade80;
+    --thirst: #4ade80;
+    --fuel: #4ade80;
+    --stamina: #fbbf24;
+    --oxygen: #38bdf8;
+    --voice-normal: #fbbf24;
+    --voice-radio: #22d3ee;
+    --circle-stroke: rgba(255, 255, 255, 0.1);
+    --hud-opacity: 0.95;
+    --hud-scale: 1;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ========================================
+   Main HUD Container
+   ======================================== */
+
+#hud-container {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    opacity: var(--hud-opacity);
+    transform: scale(var(--hud-scale));
+    transform-origin: bottom right;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+}
+
+/* ========================================
+   Walking Mode - Horizontal Row
+   ======================================== */
+
+.walking-hud {
+    animation: slideIn 0.4s ease;
+}
+
+.horizontal-circles {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.circle-item {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.295), rgba(29, 29, 29, 0.973));
+}
+
+.circle-item:hover {
+    transform: scale(1.08);
+}
+
+.circle-item.small {
+    width: 38px;
+    height: 38px;
+}
+
+.circle-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.circle-bg {
+    fill: transparent;
+    stroke: var(--circle-stroke);
+    stroke-width: 2;
+}
+
+.circle-progress {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 276;
+    stroke-dashoffset: 276;
+    transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+}
+
+.circle-progress.health { stroke: var(--health); filter: drop-shadow(0 0 6px var(--health)); }
+.circle-progress.armor { stroke: var(--armor); filter: drop-shadow(0 0 6px var(--armor)); }
+.circle-progress.hunger { stroke: var(--hunger); filter: drop-shadow(0 0 6px var(--hunger)); }
+.circle-progress.thirst { stroke: var(--thirst); filter: drop-shadow(0 0 6px var(--thirst)); }
+.circle-progress.fuel { stroke: var(--fuel); filter: drop-shadow(0 0 6px var(--fuel)); }
+.circle-progress.stamina { stroke: var(--stamina); filter: drop-shadow(0 0 6px var(--stamina)); }
+.circle-progress.oxygen { stroke: var(--oxygen); filter: drop-shadow(0 0 6px var(--oxygen)); }
+
+.circle-progress.voice {
+    stroke: rgba(255, 255, 255, 0.2);
+    filter: none;
+}
+
+.circle-progress.voice.talking {
+    stroke: var(--voice-normal);
+    filter: drop-shadow(0 0 8px var(--voice-normal));
+    animation: voicePulse 0.4s ease infinite;
+}
+
+.circle-progress.voice.radio {
+    stroke: var(--voice-radio) !important;
+    filter: drop-shadow(0 0 8px var(--voice-radio)) !important;
+}
+
+.circle-icon {
+    width: 15px;
+    height: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+    z-index: 2;
+}
+
+.circle-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Voice Icon */
+.voice-icon {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.voice-icon.talking {
+    color: var(--voice-normal);
+    animation: iconPulse 0.4s ease infinite;
+}
+
+.voice-icon.radio {
+    color: var(--voice-radio) !important;
+}
+
+.mic-icon {
+    width: 100%;
+    height: 100%;
+}
+
+.mic-icon.hidden {
+    display: none;
+}
+
+/* Voice Range Indicator */
+.voice-range {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.8), rgba(29, 29, 29, 0.95));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oxanium', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--voice-normal);
+    z-index: 5;
+}
+
+/* ========================================
+   Vehicle Mode
+   ======================================== */
+
+.vehicle-hud {
+    animation: fadeInUp 0.5s ease;
+}
+
+.main-hud {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.voice-far-left {
+    margin-right: 8px;
+}
+
+.left-circles,
+.right-circles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ========================================
+   Speedometer
+   ======================================== */
+
+.speedometer {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.295), rgba(29, 29, 29, 0.973));
+}
+
+.speed-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: rotate(135deg);
+}
+
+/* RPM - Outer Ring */
+.rpm-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.06);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 471;
+    stroke-dashoffset: 157;
+}
+
+.rpm-progress {
+    fill: none;
+    stroke: url(#rpmGradient);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 471;
+    stroke-dashoffset: 471;
+    transition: stroke-dashoffset 0.15s ease;
+    filter: drop-shadow(0 0 8px rgba(74, 222, 128, 0.5));
+}
+
+/* Speed - Inner Ring */
+.speed-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 133;
+}
+
+.speed-progress {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.7);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    transition: stroke-dashoffset 0.2s ease;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+}
+
+/* Speed Content */
+.speed-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    text-align: center;
+}
+
+.speed-value {
+    font-family: 'Oxanium', 'Orbitron', monospace;
+    font-size: 58px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1;
+    letter-spacing: -1px;
+    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.speed-unit {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 6px;
+    margin-top: 2px;
+}
+
+.gear-rpm-info {
+    display: flex;
+    gap: 25px;
+    margin-top: 12px;
+}
+
+.gear-box,
+.rpm-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gear-label,
+.rpm-label {
+    font-family: 'Oxanium', sans-serif;
+    font-size: 8px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.3);
+    letter-spacing: 2px;
+}
+
+.gear-value {
+    font-family: 'Oxanium', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+    text-shadow: 0 0 15px var(--primary);
+}
+
+.rpm-value {
+    font-family: 'Oxanium', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ========================================
+   YOS Brand
+   ======================================== */
+
+.yos-brand {
+    margin-top: 12px;
+    opacity: 0.25;
+    transition: opacity 0.3s ease;
+}
+
+.yos-brand:hover {
+    opacity: 0.5;
+}
+
+.yos-brand span {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 5px;
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes voicePulse {
+    0%, 100% { stroke-width: 3; }
+    50% { stroke-width: 5; }
+}
+
+@keyframes iconPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* ========================================
+   Settings Modal
+   ======================================== */
+
+.settings-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(15px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.settings-container {
+    border-radius: 20px;
+    width: 480px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4), 0 30px 100px rgba(0, 0, 0, 0.6), 0 0 50px rgba(74, 222, 128, 0.08);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.98), rgba(29, 29, 29, 0.99));
+    border: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+}
+
+.settings-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.close-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.8), rgba(29, 29, 29, 0.95));
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    color: #ef4444;
+}
+
+.settings-content {
+    padding: 20px 25px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.setting-group {
+    margin-bottom: 24px;
+}
+
+.setting-group > label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 12px;
+}
+
+.position-toggle {
+    display: flex;
+    gap: 8px;
+}
+
+.pos-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid rgba(74, 222, 128, 0.15);
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.8), rgba(29, 29, 29, 0.95));
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pos-btn:hover {
+    border-color: rgba(74, 222, 128, 0.3);
+}
+
+.pos-btn.active {
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.2);
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.color-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.6), rgba(29, 29, 29, 0.8));
+}
+
+.color-item span {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.color-item input[type="color"] {
+    width: 35px;
+    height: 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: transparent;
+}
+
+input[type="range"] {
+    width: 100%;
+    height: 5px;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.6), rgba(29, 29, 29, 0.8));
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, var(--primary), #22c55e);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.35);
+}
+
+.settings-footer {
+    display: flex;
+    gap: 10px;
+    padding: 15px 25px 20px;
+    border-top: 1px solid rgba(74, 222, 128, 0.08);
+}
+
+.save-btn, .reset-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, var(--primary), #22c55e);
+    color: #000;
+}
+
+.save-btn:hover {
+    box-shadow: 0 5px 25px rgba(74, 222, 128, 0.35);
+    transform: translateY(-2px);
+}
+
+.reset-btn {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    background-image: linear-gradient(to top, rgba(14, 14, 14, 0.8), rgba(29, 29, 29, 0.95));
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.reset-btn:hover {
+    color: #ef4444;
+}
